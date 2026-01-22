@@ -19,11 +19,12 @@ package action_test
 
 import (
 	"bytes"
+	"context"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/suse/elemental/v3/internal/cli/action"
 	"github.com/suse/elemental/v3/internal/cli/cmd"
@@ -55,7 +56,7 @@ var _ = Describe("Install action", Label("install"), func() {
 	var tfs vfs.FS
 	var cleanup func()
 	var err error
-	var ctx *cli.Context
+	var command *cli.Command
 	var buffer *bytes.Buffer
 
 	BeforeEach(func() {
@@ -71,25 +72,25 @@ var _ = Describe("Install action", Label("install"), func() {
 			sys.WithLogger(log.New(log.WithBuffer(buffer))),
 		)
 		Expect(err).NotTo(HaveOccurred())
-		ctx = cli.NewContext(cli.NewApp(), nil, &cli.Context{})
-		if ctx.App.Metadata == nil {
-			ctx.App.Metadata = map[string]any{}
+		command = &cli.Command{}
+		if command.Metadata == nil {
+			command.Metadata = map[string]any{}
 		}
-		ctx.App.Metadata["system"] = s
+		command.Metadata["system"] = s
 	})
 
 	AfterEach(func() {
 		cleanup()
 	})
 	It("fails if no sys.System instance is in metadata", func() {
-		ctx.App.Metadata["system"] = nil
-		Expect(action.Install(ctx)).NotTo(Succeed())
+		command.Metadata["system"] = nil
+		Expect(action.Install(context.Background(), command)).NotTo(Succeed())
 	})
 	It("fails to start installing if the configuration file can't be read", func() {
 		cmd.InstallArgs.Target = "/dev/device"
 		cmd.InstallArgs.OperatingSystemImage = "my.registry.org/my/image:test"
 		cmd.InstallArgs.Description = "doesntexist"
-		err = action.Install(ctx)
+		err = action.Install(context.Background(), command)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("ReadFile doesntexist"))
 	})
@@ -97,14 +98,14 @@ var _ = Describe("Install action", Label("install"), func() {
 		cmd.InstallArgs.Target = "/dev/device"
 		cmd.InstallArgs.OperatingSystemImage = "my.registry.org/my/image:test"
 		cmd.InstallArgs.Description = "/configDir/bad_config.yaml"
-		err = action.Install(ctx)
+		err = action.Install(context.Background(), command)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("inconsistent deployment"))
 	})
 	It("fails if the given OS uri is not valid", func() {
 		cmd.InstallArgs.Target = "/dev/device"
 		cmd.InstallArgs.OperatingSystemImage = "https://example.com/my/image"
-		err = action.Install(ctx)
+		err = action.Install(context.Background(), command)
 		Expect(err).To(HaveOccurred())
 		Expect(err.Error()).To(ContainSubstring("image source type not supported"))
 	})

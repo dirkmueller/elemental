@@ -18,11 +18,12 @@ limitations under the License.
 package action
 
 import (
+	"context"
 	"fmt"
 	"os/signal"
 	"syscall"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/suse/elemental/v3/internal/cli/cmd"
 	"github.com/suse/elemental/v3/pkg/block"
@@ -33,13 +34,13 @@ import (
 	"github.com/suse/elemental/v3/pkg/sys"
 )
 
-func Reset(ctx *cli.Context) error {
+func Reset(ctx context.Context, c *cli.Command) error {
 	var s *sys.System
 	args := &cmd.InstallArgs
-	if ctx.App.Metadata == nil || ctx.App.Metadata["system"] == nil {
+	if c.Root().Metadata == nil || c.Root().Metadata["system"] == nil {
 		return fmt.Errorf("error setting up initial configuration")
 	}
-	s = ctx.App.Metadata["system"].(*sys.System)
+	s = c.Root().Metadata["system"].(*sys.System)
 
 	s.Logger().Info("Starting reset action")
 	s.Logger().Debug("Reset action called with args: %+v", args)
@@ -50,7 +51,7 @@ func Reset(ctx *cli.Context) error {
 		return err
 	}
 
-	ctxCancel, stop := signal.NotifyContext(ctx.Context, syscall.SIGTERM, syscall.SIGINT)
+	ctxCancel, stop := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
 	go func() {

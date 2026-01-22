@@ -23,7 +23,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"go.yaml.in/yaml/v3"
 
 	"github.com/suse/elemental/v3/internal/cli/cmd"
@@ -41,13 +41,13 @@ import (
 	"github.com/suse/elemental/v3/pkg/upgrade"
 )
 
-func Install(ctx *cli.Context) error {
+func Install(ctx context.Context, c *cli.Command) error {
 	var s *sys.System
 	args := &cmd.InstallArgs
-	if ctx.App.Metadata == nil || ctx.App.Metadata["system"] == nil {
+	if c.Root().Metadata == nil || c.Root().Metadata["system"] == nil {
 		return fmt.Errorf("error setting up initial configuration")
 	}
-	s = ctx.App.Metadata["system"].(*sys.System)
+	s = c.Root().Metadata["system"].(*sys.System)
 
 	s.Logger().Info("Starting install action")
 	s.Logger().Debug("Install action called with args: %+v", args)
@@ -60,7 +60,7 @@ func Install(ctx *cli.Context) error {
 
 	s.Logger().Info("Checked configuration, running installation process")
 
-	ctxCancel, stop := signal.NotifyContext(ctx.Context, syscall.SIGTERM, syscall.SIGINT)
+	ctxCancel, stop := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	defer stop()
 
 	go func() {

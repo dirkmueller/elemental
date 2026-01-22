@@ -21,15 +21,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func Name() string {
 	return filepath.Base(os.Args[0])
 }
 
-func New(usage string, globalFlags []cli.Flag, setupFunc cli.BeforeFunc, teardownFunc cli.AfterFunc, commands ...*cli.Command) *cli.App {
-	app := cli.NewApp()
+func New(usage string, globalFlags []cli.Flag, setupFunc cli.BeforeFunc, teardownFunc cli.AfterFunc, commands ...*cli.Command) *cli.Command {
+	app := &cli.Command{}
 
 	app.Flags = globalFlags
 	app.Name = Name()

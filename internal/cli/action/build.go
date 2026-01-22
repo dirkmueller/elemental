@@ -18,6 +18,7 @@ limitations under the License.
 package action
 
 import (
+	"context"
 	"fmt"
 	"os/signal"
 	"path/filepath"
@@ -25,7 +26,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/suse/elemental/v3/internal/build"
 	"github.com/suse/elemental/v3/internal/cli/cmd"
@@ -38,16 +39,16 @@ import (
 	"github.com/suse/elemental/v3/pkg/sys/vfs"
 )
 
-func Build(ctx *cli.Context) error {
+func Build(ctx context.Context, c *cli.Command) error {
 	args := &cmd.BuildArgs
 
-	if ctx.App.Metadata == nil || ctx.App.Metadata["system"] == nil {
+	if c.Root().Metadata == nil || c.Root().Metadata["system"] == nil {
 		return fmt.Errorf("error setting up initial configuration")
 	}
-	system := ctx.App.Metadata["system"].(*sys.System)
+	system := c.Root().Metadata["system"].(*sys.System)
 	logger := system.Logger()
 
-	ctxCancel, cancelFunc := signal.NotifyContext(ctx.Context, syscall.SIGTERM, syscall.SIGINT)
+	ctxCancel, cancelFunc := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	defer cancelFunc()
 
 	logger.Warn("Warning: build is deprecated. Switch to customize going forward.")

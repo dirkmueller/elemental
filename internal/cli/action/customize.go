@@ -26,7 +26,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
 	"github.com/suse/elemental/v3/internal/cli/cmd"
 	"github.com/suse/elemental/v3/internal/config"
@@ -40,11 +40,11 @@ import (
 	"github.com/suse/elemental/v3/pkg/sys/vfs"
 )
 
-func Customize(ctx *cli.Context) error {
-	if ctx.App.Metadata == nil || ctx.App.Metadata["system"] == nil {
+func Customize(ctx context.Context, c *cli.Command) error {
+	if c.Root().Metadata == nil || c.Root().Metadata["system"] == nil {
 		return fmt.Errorf("error setting up initial configuration")
 	}
-	system := ctx.App.Metadata["system"].(*sys.System)
+	system := c.Root().Metadata["system"].(*sys.System)
 	logger := system.Logger()
 	fs := system.FS()
 	args := &cmd.CustomizeArgs
@@ -72,7 +72,7 @@ func Customize(ctx *cli.Context) error {
 		return err
 	}
 
-	ctxCancel, cancelFunc := signal.NotifyContext(ctx.Context, syscall.SIGTERM, syscall.SIGINT)
+	ctxCancel, cancelFunc := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	defer cancelFunc()
 
 	customizeRunner, err := setupCustomizeRunner(ctxCancel, system, args, output)

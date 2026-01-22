@@ -18,6 +18,7 @@ limitations under the License.
 package action
 
 import (
+	"context"
 	"fmt"
 	"os/signal"
 	"path/filepath"
@@ -27,18 +28,18 @@ import (
 	"github.com/suse/elemental/v3/internal/kmod"
 	"github.com/suse/elemental/v3/pkg/sys"
 	"github.com/suse/elemental/v3/pkg/sys/vfs"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
-func ManageKernelModules(c *cli.Context) error {
+func ManageKernelModules(ctx context.Context, c *cli.Command) error {
 	args := &cmd.KernelModulesArgs
 
-	if c.App.Metadata == nil || c.App.Metadata["system"] == nil {
+	if c.Root().Metadata == nil || c.Root().Metadata["system"] == nil {
 		return fmt.Errorf("error setting up initial configuration")
 	}
-	system := c.App.Metadata["system"].(*sys.System)
+	system := c.Root().Metadata["system"].(*sys.System)
 
-	ctx, cancelFunc := signal.NotifyContext(c.Context, syscall.SIGTERM, syscall.SIGINT)
+	ctx, cancelFunc := signal.NotifyContext(ctx, syscall.SIGTERM, syscall.SIGINT)
 	defer cancelFunc()
 
 	logger := system.Logger()
